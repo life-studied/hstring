@@ -186,6 +186,7 @@ namespace m_hstring {
 	public:
 		hstring() : Number(only_pool->getMemory()),len(1) {}
 		hstring(const char* str) : Number(only_pool->getMemory(length(str), str)),len(length(str)) {}
+		hstring(char* str) : Number(only_pool->getMemory(length(str), str)), len(length(str)) {}
 		hstring(const hstring& hstr) : Number(only_pool->getMemory(hstr.len,hstr.Show())), len(hstr.len) {}
 		~hstring() { only_pool->deleteMemory(Number); };
 		hstring& operator=(const char* str)
@@ -198,7 +199,9 @@ namespace m_hstring {
 		hstring& operator=(hstring& hstr)
 		{
 			this->only_pool->deleteMemory(this->Number);
-			this->only_pool->getMemory(hstr.len, hstr.Show());
+			this->Number = this->only_pool->getMemory(hstr.len, hstr.Show());
+			this->len = hstr.len;
+			return *this;
 		}
 	public:
 		char& operator[](int n)
@@ -207,13 +210,15 @@ namespace m_hstring {
 			char* temp = only_pool->search(Number);
 			return temp[n];
 		}
-		friend hstring operator+(hstring& hstr1,hstring& hstr2)
+		friend hstring& operator+(hstring& hstr1,hstring& hstr2)
 		{
 			int fulllen = hstr1.len + hstr2.len;
 			char* t = new char[fulllen];
 			memcpy(t, hstr1.Show(), hstr1.len);
 			memcpy(t + hstr1.len, hstr2.Show(), hstr2.len);
-			return hstring(t);
+			hstring temp = hstring(t);
+			delete[] t;
+			return temp;
 		}
 		friend std::ostream& operator<<(std::ostream& out, hstring& hstr)
 		{

@@ -1,4 +1,5 @@
 ﻿  hstring.cpp
   源.cpp
   正在生成代码...
+D:\coding_workspace\vs2022\hstring\hstring\hstring.h(221): warning C4172: 返回局部变量或临时变量的地址: temp
   hstring.vcxproj -> D:\coding_workspace\vs2022\hstring\x64\Debug\hstring.exe
