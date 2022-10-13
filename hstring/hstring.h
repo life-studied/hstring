@@ -196,7 +196,7 @@ namespace m_hstring {
 			this->len = length(str);
 			return *this;
 		}
-		hstring& operator=(hstring& hstr)
+		hstring& operator=(hstring hstr)
 		{
 			this->only_pool->deleteMemory(this->Number);
 			this->Number = this->only_pool->getMemory(hstr.len, hstr.Show());
@@ -210,12 +210,12 @@ namespace m_hstring {
 			char* temp = only_pool->search(Number);
 			return temp[n];
 		}
-		friend hstring& operator+(hstring& hstr1,hstring& hstr2)
+		friend hstring operator+(hstring& hstr1,hstring& hstr2)
 		{
 			int fulllen = hstr1.len + hstr2.len;
 			char* t = new char[fulllen];
-			memcpy(t, hstr1.Show(), hstr1.len);
-			memcpy(t + hstr1.len, hstr2.Show(), hstr2.len);
+			memcpy(t, hstr1.Show(), hstr1.len-1);
+			memcpy(t + hstr1.len-1, hstr2.Show(), hstr2.len);
 			hstring temp = hstring(t);
 			delete[] t;
 			return temp;
@@ -238,40 +238,40 @@ namespace m_hstring {
 		int find(const char* prt) 
 		{
 			int l_prt = length(prt);
+			return kmp(prt, l_prt-1, this->only_pool->search(Number), len-1);
 		}
-		void SetStr(const char* str){};
-	private:
-		int kmp(const char* prt, const int len1, const char* txt, const int len2) const
+		int find(hstring& hstr)
 		{
-			int* next = new int[len2];
-			for (int i = 1; i < len1; i++)
-				next[i] = 0;
-			next[0] = -1;
-			next[1] = -1;
-			for (int i = 0; i < len1; i++)
-			{
-				for (int j = 0; j <= i - 1; j++)
-				{
-					if (prt[j] == prt[i - j - 1])
-						next[i]++;
-					else
-						break;
+			return this->find(hstr.Show());
+		}
+		void SetStr(const char* str)
+		{
+			*this = str;
+		}
+		void swap(hstring& hstr2)
+		{ 
+			int temp_len = this->len;
+			int temp_num = this->Number;
+			this->len = hstr2.len;
+			hstr2.len = temp_len;
+			this->Number = hstr2.Number;
+			hstr2.Number = temp_num;
+		}
+		friend void swap(hstring& h1, hstring& h2)
+		{
+			h1.swap(h2);
+		}
+	private:
+		int kmp(const char* p,int len1, const char* s,int len2) {
+			if (len2 < len1)
+				return -1;
+			int pmt[50]={0};
+			for (int i = 0, j = 0; i < len2; ++i) {
+				while (j && s[i] != p[j]) j = pmt[j - 1];
+				if (s[i] == p[j]) j++;
+				if (j == len1) {
+					return i - j + 1;
 				}
-			}
-
-			int num = 0;
-			for (int i = 0, j = 0; i < len2; i++, j++)
-			{
-				if (txt[i] == prt[j])
-					num++;
-				else
-				{
-					j = next[j];
-					i--;
-					j--;
-				}
-				if (num == len1)
-					return i - j;
 			}
 			return -1;
 		}
