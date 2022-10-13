@@ -230,7 +230,11 @@ namespace m_hstring {
 			std::cin.getline(only_pool->search(hstr.Number), 50);
 			return in;
 		}
-		
+		hstring& operator+=(hstring& hstr2)
+		{
+			*this = *this + hstr2;
+			return *this;
+		}
 		const char* Show() const
 		{
 			return only_pool->search(Number);
