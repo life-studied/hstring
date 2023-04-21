@@ -54,7 +54,14 @@ namespace m_hstring {
 		Element* free_pieces;		//指向空闲内存链表
 		Element* used_pieces;		//指向使用内存链表
 
-	public:						//构造函数
+	public:
+		static Memory_Pool* getInstance()
+		{
+			static Memory_Pool myPool;
+			return &myPool;
+		}
+
+	private:						//构造函数
 		Memory_Pool() :used_pieces(nullptr)
 		{
 			free_pieces = new Element();
@@ -173,9 +180,9 @@ namespace m_hstring {
 	{
 	private:
 		friend class Memory_Pool;
-		static Memory_Pool* only_pool;
-		int Number;
+		static Memory_Pool* only_pool;	
 		unsigned short len;
+		int Number;
 	private:
 		unsigned short length(const char* str)
 		{
@@ -185,9 +192,9 @@ namespace m_hstring {
 		}
 	public:
 		hstring() : Number(only_pool->getMemory()),len(1) {}
-		hstring(const char* str) : Number(only_pool->getMemory(length(str), str)),len(length(str)) {}
-		hstring(char* str) : Number(only_pool->getMemory(length(str), str)), len(length(str)) {}
-		hstring(const hstring& hstr) : Number(only_pool->getMemory(hstr.len,hstr.Show())), len(hstr.len) {}
+		hstring(const char* str) : Number(only_pool->getMemory(len, str)),len(length(str)) {}
+		hstring(char* str) : Number(only_pool->getMemory(len, str)), len(length(str)) {}
+		hstring(const hstring& hstr) : Number(only_pool->getMemory(hstr.len,hstr.c_str())), len(hstr.len) {}
 		~hstring() { only_pool->deleteMemory(Number); };
 		hstring& operator=(const char* str)
 		{
@@ -199,7 +206,7 @@ namespace m_hstring {
 		hstring& operator=(hstring hstr)
 		{
 			this->only_pool->deleteMemory(this->Number);
-			this->Number = this->only_pool->getMemory(hstr.len, hstr.Show());
+			this->Number = this->only_pool->getMemory(hstr.len, hstr.c_str());
 			this->len = hstr.len;
 			return *this;
 		}
@@ -214,15 +221,15 @@ namespace m_hstring {
 		{
 			int fulllen = hstr1.len + hstr2.len;
 			char* t = new char[fulllen];
-			memcpy(t, hstr1.Show(), hstr1.len-1);
-			memcpy(t + hstr1.len-1, hstr2.Show(), hstr2.len);
+			memcpy(t, hstr1.c_str(), hstr1.len-1);
+			memcpy(t + hstr1.len-1, hstr2.c_str(), hstr2.len);
 			hstring temp = hstring(t);
 			delete[] t;
 			return temp;
 		}
 		friend std::ostream& operator<<(std::ostream& out, hstring& hstr)
 		{
-			std::cout << hstr.Show();
+			std::cout << hstr.c_str();
 			return out;
 		}
 		friend std::istream& operator>>(std::istream& in, hstring& hstr) 
@@ -235,19 +242,14 @@ namespace m_hstring {
 			*this = *this + hstr2;
 			return *this;
 		}
-		const char* Show() const
+		const char* c_str() const
 		{
 			return only_pool->search(Number);
 		}
-		int find(const char* prt) 
-		{
-			int l_prt = length(prt);
-			return kmp(prt, l_prt-1, this->only_pool->search(Number), len-1);
-		}
-		int find(hstring& hstr)
-		{
-			return this->find(hstr.Show());
-		}
+	private:
+		
+	public:
+		size_t find(hstring hstr) { return kmp(hstr.c_str(), hstr.len, this->c_str(), this->len); };
 		void SetStr(const char* str)
 		{
 			*this = str;
@@ -266,11 +268,11 @@ namespace m_hstring {
 			h1.swap(h2);
 		}
 	private:
-		int kmp(const char* p,int len1, const char* s,int len2) {
+		size_t kmp(const char* p,int len1, const char* s,int len2) {
 			if (len2 < len1)
 				return -1;
-			int pmt[50]={0};
-			for (int i = 0, j = 0; i < len2; ++i) {
+			int* pmt = new int[len2 + 1] { 0 };
+			for (size_t i = 0, j = 0; i < len2; ++i) {
 				while (j && s[i] != p[j]) j = pmt[j - 1];
 				if (s[i] == p[j]) j++;
 				if (j == len1) {
